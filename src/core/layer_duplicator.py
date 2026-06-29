@@ -156,6 +156,31 @@ class LayerDuplicatedModel(nn.Module):
             layer_copy = _shallow_copy_layer(self._original_layers[orig_idx], new_pos)
             new_layer_list.append(layer_copy)
 
+        # Gemma-style architectures (e.g. Gemma 4) carry a learned per-layer
+        # scalar buffer applied at the end of each decoder layer:
+        # `hidden_states *= layer_scalar`. Each layer is calibrated for its
+        # training position. Naively duplicating a layer applies its scalar
+        # twice, which over-attenuates the residual stream (Gemma 4 31B's mid-
+        # stack scalars run ~0.43-0.55, so two applications give ~0.19, far
+        # off the calibrated gain) and the model degrades into garbage.
+        # Fix: when a layer appears N times in the new sequence, set each
+        # copy's scalar to s^(1/N) so the cumulative multiplicative gain
+        # equals one baseline application. No-op on architectures without
+        # a layer_scalar buffer (Llama, Qwen, etc.).
+        from collections import Counter
+        occurrence_counts = Counter(layer_indices)
+        for new_pos, orig_idx in enumerate(layer_indices):
+            n = occurrence_counts[orig_idx]
+            if n <= 1:
+                continue
+            layer_copy = new_layer_list[new_pos]
+            buf = layer_copy._buffers.get("layer_scalar")
+            if buf is None:
+                continue
+            layer_copy._buffers = dict(layer_copy._buffers)
+            new_scalar = buf.float().pow(1.0 / n).to(buf.dtype).contiguous()
+            layer_copy._buffers["layer_scalar"] = new_scalar
+
         self._new_layers = nn.ModuleList(new_layer_list)
 
     @property

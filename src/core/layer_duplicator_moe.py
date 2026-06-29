@@ -186,6 +186,26 @@ class LayerDuplicatedModelMoE(nn.Module):
             layer_copy = _shallow_copy_layer_moe(self._original_layers[orig_idx], new_pos)
             new_layer_list.append(layer_copy)
 
+        # Gemma-style architectures carry a learned per-layer scalar buffer
+        # applied at the end of each decoder layer. Naive duplication applies
+        # the scalar N times, over-attenuating the residual stream. Set each
+        # copy's scalar to s^(1/N) so cumulative gain matches one baseline
+        # application. No-op when the buffer is absent. See the dense
+        # duplicator for the full rationale.
+        from collections import Counter
+        occurrence_counts = Counter(layer_indices)
+        for new_pos, orig_idx in enumerate(layer_indices):
+            n = occurrence_counts[orig_idx]
+            if n <= 1:
+                continue
+            layer_copy = new_layer_list[new_pos]
+            buf = layer_copy._buffers.get("layer_scalar")
+            if buf is None:
+                continue
+            layer_copy._buffers = dict(layer_copy._buffers)
+            new_scalar = buf.float().pow(1.0 / n).to(buf.dtype).contiguous()
+            layer_copy._buffers["layer_scalar"] = new_scalar
+
         self._new_layers = nn.ModuleList(new_layer_list)
 
     @property
