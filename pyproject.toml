@@ -16,7 +16,7 @@ dependencies = [
     "safetensors>=0.7.0",
     "torch",
     "tqdm>=4.66",
-    "transformers>=5.0.0rc0",
+    "transformers>=5.9.0",
     "xgboost>=3.2.0",
 ]
 
