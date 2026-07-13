@@ -72,6 +72,11 @@ def generate_eq_messages(prompt: str, *, use_no_think_prefix: bool = True) -> li
     return [{"role": "user", "content": prompt_text}]
 
 
+def select_eq_reference(sample: dict) -> dict:
+    """Select labels on the independent 0-10 scale requested by the prompt."""
+    return sample.get("reference_answer_fullscale", sample.get("reference_answer", {}))
+
+
 def extract_scores_from_section(text: str) -> Optional[list[float]]:
     """
     Extract 4 scores from a section like "First pass scores:" or "Revised scores:".
@@ -255,7 +260,7 @@ def pretokenize_eq_dataset(dataset: dict, tokenizer, device, *, use_no_think_pre
         tokenized[qid] = {
             'input_ids': inputs['input_ids'].to(device),
             'attention_mask': inputs['attention_mask'].to(device),
-            'reference': sample.get('reference_answer', sample.get('reference_answer_fullscale', {})),
+            'reference': select_eq_reference(sample),
         }
 
     print(f"Pre-tokenized {len(tokenized)} questions")

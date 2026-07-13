@@ -347,7 +347,7 @@ def main() -> None:
     import torch
     from transformers import AutoTokenizer
     from src.core.layer_config import layer_spec_string, parse_queue_entry_layers
-    from src.workers.eq_worker import generate_eq_messages
+    from src.workers.eq_worker import generate_eq_messages, select_eq_reference
     from src.workers.shared_queue import SharedWorkQueue
 
     if args.worker_id is None:
@@ -409,7 +409,7 @@ def main() -> None:
             {
                 "task": "eq",
                 "qid": qid,
-                "reference": sample.get("reference_answer", sample.get("reference_answer_fullscale", {})),
+                "reference": select_eq_reference(sample),
             }
         )
 

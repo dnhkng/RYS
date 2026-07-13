@@ -315,6 +315,7 @@ def main():
     import torch
     from transformers import AutoTokenizer
     from src.core.layer_config import layer_spec_string, parse_queue_entry_layers
+    from src.workers.eq_worker import select_eq_reference
     from src.workers.shared_queue import SharedWorkQueue
 
     if args.worker_id is None:
@@ -348,7 +349,7 @@ def main():
     for qid, sample in dataset.items():
         messages = generate_eq_messages(sample["prompt"])
         prompts.append(apply_chat_template(hf_tokenizer, messages))
-        references.append(sample.get("reference_answer", sample.get("reference_answer_fullscale", {})))
+        references.append(select_eq_reference(sample))
         qids.append(qid)
 
     print("Loading model weights once (reusing across configs)...")
