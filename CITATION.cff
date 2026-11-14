@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: >-
+  If you use RYS or the layer-duplication method in your work, please cite the
+  write-up below rather than only this repository.
+title: "RYS: Repeat Your Self"
+type: software
+authors:
+  - family-names: Ng
+    given-names: David Noel
+    orcid: "https://orcid.org/0009-0009-3006-4068"
+repository-code: "https://github.com/dnhkng/RYS"
+url: "https://dnhkng.github.io/posts/rys/"
+keywords:
+  - large language models
+  - transformers
+  - layer duplication
+  - self-merge
+  - inference-time depth
+preferred-citation:
+  type: generic
+  title: "LLM Neuroanatomy: How I Topped the LLM Leaderboard Without Changing a Single Weight"
+  authors:
+    - family-names: Ng
+      given-names: David Noel
+      orcid: "https://orcid.org/0009-0009-3006-4068"
+  year: 2026
+  month: 3
+  publisher:
+    name: Zenodo
+  doi: "10.5281/zenodo.24230106"
+  url: "https://dnhkng.github.io/posts/rys/"
